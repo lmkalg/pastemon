@@ -3,23 +3,26 @@ from condition import StringCondition, RegexCondition
 from constants import NAME, STRING, REGEX
 from argparse import ArgumentParser
     
-def _match_conditions(self, content):
+def _match_conditions(conditions, pastebin_content):
     """
         If it matches some of the conditions provided, then is because we believe it could be 
         somehow an interesting paste
     """
     matched_conditions_names = []
-    for line in content.split('\n'):
+    for line in pastebin_content.split('\n'):
         for condition in conditions:
-            if len(matched_conditions_names) == len(conditions):
-                return matched_conditions_names
-            else:
-                if condition.match(line):
-                    matched_conditions_names.append(condition.condition_name())
+            if condition.condition_name() not in matched_conditions_names:
+                if len(matched_conditions_names) == len(conditions):
+                    return matched_conditions_names
+                else:
+                    if condition.match(line):
+                        matched_conditions_names.append(condition.condition_name())
+
     return matched_conditions_names
 
 def help():
     return "Pastemon tester - Easy script to quickly test if a pastebin will match against defined condition\n"
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-c",dest="conditions_yaml_file", help="Path to the conditions YAML file")
@@ -31,9 +34,9 @@ if __name__ == "__main__":
 
     conditions = []
     with open(args.conditions_yaml_file) as f:
-        content = yaml.safe_load(f)
+        yaml_conditions = yaml.safe_load(f)
 
-    for condition_name, condition_properties in content.items():
+    for condition_name, condition_properties in yaml_conditions.items():
         condition_properties.update({NAME:condition_name})
         if STRING in condition_properties:
             conditions.append(StringCondition(**condition_properties))
@@ -42,9 +45,9 @@ if __name__ == "__main__":
 
 
     with open(args.pastebin_file) as f:
-        content = f.read()
+        pastebin_content = f.read()
 
     print("Conditions matched:")
-    for condition_name in (_match_conditions(conditions, content)):
+    for condition_name in (_match_conditions(conditions, pastebin_content)):
         print ("\t- {}".format(condition_name))
 

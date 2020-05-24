@@ -28,12 +28,11 @@ class RegexCondition(Condition):
         self.times = times
         self.times_matched = 0
         
-        if icase:
-            self.regex = re.compile(regex, re.IGNORECASE)
-        else:
-            self.regex = re.compile(regex)
+        self.regex = re.compile(regex, re.IGNORECASE) if icase else re.compile(regex)
 
     def match_line(self, line):
+        if len(line) > 1000: #Hack to avoid wasting time in long lines
+            return False
         return re.search(self.regex, line)
 
 class StringCondition(Condition):
@@ -46,6 +45,8 @@ class StringCondition(Condition):
         self.string = string.lower() if icase else string
 
     def match_line (self, line):
+        if len(line) > 1000: #Hack to avoid wasting time in long lines
+            return False
         if self.icase:
             line = line.lower()
         return self.string in line
